@@ -1,0 +1,36 @@
+name: dns-manager
+
+volumes:
+  dnsm-nginx:
+    name: dnsm-nginx
+
+services:
+  dnsm:
+    container_name: dnsm
+    build:
+      context: dnsm
+    depends_on:
+      - nginx
+    env_file:
+      - dnsm/.env
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /tmp/docker.sock
+        read_only: true
+      - type: volume
+        source: dnsm-nginx
+        target: /app/dnsm/conf.d/
+
+  nginx:
+    container_name: nginx
+    build:
+      context: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: volume
+        source: dnsm-nginx
+        target: /etc/nginx/conf.d/
+        read_only: true
