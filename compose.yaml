@@ -11,8 +11,7 @@ services:
       context: dnsm
     depends_on:
       - nginx
-    env_file:
-      - dnsm/.env
+    env_file: ./dnsm/.env
     volumes:
       - type: bind
         source: /var/run/docker.sock
