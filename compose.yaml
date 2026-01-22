@@ -33,3 +33,7 @@ services:
         source: dnsm-nginx
         target: /etc/nginx/conf.d/
         read_only: true
+
+networks:
+  default:
+    driver: bridge

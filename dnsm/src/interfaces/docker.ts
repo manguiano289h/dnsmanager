@@ -19,9 +19,11 @@ export interface Container {
     Name: string;
     Config: {
         ExposedPorts: {
-          [key: string]: {};
+            [key: string]: {};
         };
-        Env: Array<string>;
+        Labels: {
+            [key: string]: string;
+        };
     };
     NetworkSettings: {
         Ports: {
