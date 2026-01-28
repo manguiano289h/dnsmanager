@@ -46,6 +46,7 @@ docker.monitorEvents((event) => {
                     const port = ports[0]!!;
                     nginx.createNginxConfig(record, domain, ip, port);
                 }).then(() => {
+                    console.log(`Created record ${subdomain}`);
                     docker.restartNginx();
                 }).catch((err) => {
                     console.error("Cloudflare encountered an error while creating a record for " + container.Name);
@@ -56,7 +57,26 @@ docker.monitorEvents((event) => {
                console.error(err);
             });
         } else if (event.Action === "disconnect") {
-            // Delete nginx config and reload
+            docker.inspectContainer(event.Actor.Attributes.container).then((container) => {
+                const labels = container.Config.Labels;
+                const subdomain = labels["tech.dnsmanager.domain"]?.toLowerCase();
+                if (!subdomain) {
+                    console.log(container.Name + " does not specify a subdomain.");
+                    return;
+                }
+
+                const { record, domain } = cf.parseDomain(subdomain);
+                if (!record.id) {
+                    console.log("The domain specified does not exist in the Cloudflare API.");
+                    return;
+                }
+
+                nginx.deleteNginxConfig(record.name);
+                cf.deleteRecord(record.id, domain).finally(() => {
+                    console.log(`Deleted record ${record.name}`);
+                    docker.restartNginx();
+                });
+            })
         }
     }
 });

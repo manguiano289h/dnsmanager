@@ -9,7 +9,7 @@ const asFile = (config: NginxConf) => `upstream ${config.record} {
 
 server {
     listen 443 ssl;
-    server_name ${config.record}.${config.domain};
+    server_name ${config.record};
     
     ssl_certificate /etc/nginx/conf.d/certs/${config.domain}.crt;
     ssl_certificate_key /etc/nginx/conf.d/certs/${config.domain}.key;
@@ -22,7 +22,7 @@ server {
 
 function createNginxConfig(record: string, domain: string, ip: string, port: string) {
     const config: NginxConf = {
-        path: `./conf.d/${record}.${domain}.conf`,
+        path: `./conf.d/${record}.conf`,
         domain,
         record,
         ip,
@@ -40,6 +40,10 @@ function createNginxConfig(record: string, domain: string, ip: string, port: str
 
         createCSR(config.domain);
     })
+}
+
+function deleteNginxConfig(record: string) {
+    fs.unlinkSync(`./conf.d/${record}.conf`);
 }
 
 function crtExists(domain: string) {
@@ -80,4 +84,4 @@ function createCSR(domain: string) {
     });
 }
 
-export { createNginxConfig };
+export { createNginxConfig, deleteNginxConfig };
