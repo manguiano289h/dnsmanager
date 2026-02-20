@@ -28,8 +28,9 @@ export function dockerRequest(url: string, options: RequestInit = {}) {
     return fetch("http://localhost" + url, {
         dispatcher: new Agent({
             connect: {
-                socketPath: "/tmp/docker.sock"
-            }
+                socketPath: "/tmp/docker.sock",
+            },
+            bodyTimeout: 0
         }),
         ...options,
     });

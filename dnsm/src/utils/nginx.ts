@@ -3,7 +3,8 @@ import fs from "fs";
 import * as cf from "./cloudflareApi.js"
 import forge from "node-forge";
 
-const asFile = (config: NginxConf) => `upstream ${config.record} {
+const asFile = (config: NginxConf, container?: string) => `${container ? `# container-name ${container}` : "# manual"}
+upstream ${config.record} {
     server ${config.ip}:${config.port};
 }
 
@@ -20,7 +21,7 @@ server {
 }
 `
 
-function createNginxConfig(record: string, domain: string, ip: string, port: string) {
+function createNginxConfig(record: string, domain: string, ip: string, port: string, container?: string) {
     const config: NginxConf = {
         path: `./conf.d/${record}.conf`,
         domain,
@@ -29,7 +30,7 @@ function createNginxConfig(record: string, domain: string, ip: string, port: str
         port,
     }
 
-    return fs.writeFile(config.path, asFile(config), (err) => {
+    return fs.writeFile(config.path, asFile(config, container), (err) => {
         if (err) {
             throw err;
         }

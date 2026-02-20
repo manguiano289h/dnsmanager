@@ -14,12 +14,9 @@ docker.monitorEvents((event) => {
     if (event.Actor.Attributes.container === docker.containerId()) {
         if (event.Action === "connect") {
             docker.addToNetwork(event.Actor.ID);
-            // Create nginx configs for all containers already created that had no config to begin with
         } else if (event.Action === "disconnect") {
             if (!docker.removeFromNetwork(event.Actor.ID)) {
                 console.log(`dnsm disconnected from a network that it wasn't a part of? (${event.Actor.ID})`)
-            } else {
-                // Remove nginx configs for all containers that had configs and no longer share a network
             }
         }
     } else if (docker.isInNetwork(event.Actor.ID)) {
@@ -44,7 +41,7 @@ docker.monitorEvents((event) => {
                     const network = Object.values(container.NetworkSettings.Networks).find((it) => it.NetworkID == event.Actor.ID)!!
                     const ip = network.IPAddress;
                     const port = ports[0]!!;
-                    nginx.createNginxConfig(record, domain, ip, port);
+                    nginx.createNginxConfig(record, domain, ip, port, container.Name);
                 }).then(() => {
                     console.log(`Created record ${subdomain}`);
                     docker.restartNginx();
