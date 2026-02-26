@@ -2,7 +2,8 @@
 import * as cf from "../utils/cloudflareApi.js";
 import * as docker from "../utils/dockerApi.js";
 import fs from "fs";
-//import * as nginx from "../utils/nginx.js";
+import type {HttpCodeConf, ProxyPassConf, RedirectConf} from "../interfaces/nginx.js";
+import * as nginx from "../utils/nginx.js";
 
 for (let i = 0; i < process.argv.length; i++) {
     console.log(i + " - " + process.argv[i]);
@@ -50,19 +51,65 @@ if (args[0] === "domain") {
     const [ action, input, data ] = args.slice(1);
     if (action === "create") {
         if (input && data) {
-            const { record } = cf.parseDomain(input);
+            const { domain, record } = cf.parseDomain(input);
             if (!record.id) {
                 console.log("The specified record is not available in the Cloudflare API!");
                 process.exit(0);
             }
 
-            /* Valid options:
-             * dnsm nginx create ex.example.com 404 (returns the http code)
-             * dnsm nginx create ex.example.com 192.168.1.1:80 (proxy_pass-es to ip and port)
-             * dnsm nginx create ex.example.com https://github.com/manguiano289h/dnsmanager (redirects to site)
-             */
+            if (data.startsWith("http")) {
+                const config: RedirectConf = {
+                    path: `./conf.d/${record.name}.conf`,
+                    domain: domain.name,
+                    record: record.name,
+                    type: "Redirect",
+                    redirect: data,
+                };
 
+                nginx.createNginxConfig(config);
+                console.log(`Created a redirect from ${record.name} to ${data}`);
+                process.exit(0);
+            } else if (!isNaN(+data)) {
+                const code = +data;
+                if (code >= 100 && code <= 599) {
+                    const config: HttpCodeConf = {
+                        path: `./conf.d/${record.name}.conf`,
+                        domain: domain.name,
+                        record: record.name,
+                        type: "Code",
+                        code: data,
+                    };
 
+                    nginx.createNginxConfig(config);
+                    console.log(`Created nginx config, ${record.name} returns HTTP code ${data}`);
+                    process.exit(0);
+                } else {
+                    console.log(`${code} is not a valid HTTP response status code!`);
+                    process.exit(0);
+                }
+            } else if (data.includes(":")) {
+                const ip = data.split(":")[0]!!;
+                const port = data.split(":")[1]!!;
+
+                const config: ProxyPassConf = {
+                    path: `./conf.d/${record.name}.conf`,
+                    domain: domain.name,
+                    record: record.name,
+                    type: "Pass",
+                    ip,
+                    port,
+                };
+                nginx.createNginxConfig(config);
+                console.log(`Created nginx config, ${record.name} passes to ${ip}:${port}`);
+                process.exit(0);
+            } else {
+                console.log("Not a valid nginx config action!");
+                console.log("Include either:");
+                console.log("- an HTTP response status code (e.g. 404)");
+                console.log("- a local IP and port to proxy pass to (e.g. 192.168.1.1:80)");
+                console.log("- a domain to redirect to (e.g. https://github.com/manguiano289h/dnsmanager)");
+                process.exit(0);
+            }
         } else {
             console.log("You need to specify a domain config to create!");
             process.exit(0);

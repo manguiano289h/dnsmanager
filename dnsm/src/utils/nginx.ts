@@ -1,9 +1,9 @@
-import type {NginxConf} from "../interfaces/nginx.js";
+import type {HttpCodeConf, NginxConf, ProxyPassConf, RedirectConf} from "../interfaces/nginx.js";
 import fs from "fs";
 import * as cf from "./cloudflareApi.js"
 import forge from "node-forge";
 
-const asFile = (config: NginxConf, container?: string) => `${container ? `# container-name ${container}` : "# manual"}
+const passFile = (config: ProxyPassConf, name?: string) =>  `${name ? `# name ${name}` : "# manual"}
 upstream ${config.record} {
     server ${config.ip}:${config.port};
 }
@@ -21,16 +21,45 @@ server {
 }
 `
 
-function createNginxConfig(record: string, domain: string, ip: string, port: string, container?: string) {
-    const config: NginxConf = {
-        path: `./conf.d/${record}.conf`,
-        domain,
-        record,
-        ip,
-        port,
+const codeFile = (config: HttpCodeConf) => `# manual
+server {
+    listen 443 ssl;
+    server_name ${config.record};
+    
+    ssl_certificate /etc/nginx/conf.d/certs/${config.domain}.crt;
+    ssl_certificate_key /etc/nginx/conf.d/certs/${config.domain}.key;
+    
+    return ${config.code};
+}
+`
+
+const redirectFile = (config: RedirectConf) => `# manual
+server {
+    listen 443 ssl;
+    server_name ${config.record};
+    
+    ssl_certificate /etc/nginx/conf.d/certs/${config.domain}.crt;
+    ssl_certificate_key /etc/nginx/conf.d/certs/${config.domain}.key;
+    
+    return 301 ${config.redirect};
+}
+`
+
+function createNginxConfig(config: NginxConf, name?: string) {
+    let file: string | undefined;
+    if (config.type === "Pass") {
+        file = passFile(config, name);
+    } else if (config.type === "Code") {
+        file = codeFile(config);
+    } else if (config.type === "Redirect") {
+        file = redirectFile(config);
     }
 
-    return fs.writeFile(config.path, asFile(config, container), (err) => {
+    if (!file) {
+        throw new Error(`Could not create a config file for config type "${config.type}"`);
+    }
+
+    return fs.writeFile(config.path, file, (err) => {
         if (err) {
             throw err;
         }
@@ -40,7 +69,7 @@ function createNginxConfig(record: string, domain: string, ip: string, port: str
         }
 
         createCSR(config.domain);
-    })
+    });
 }
 
 function deleteNginxConfig(record: string) {

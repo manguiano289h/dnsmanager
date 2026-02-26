@@ -1,6 +1,7 @@
 import * as cf from "./utils/cloudflareApi.js";
 import * as docker from "./utils/dockerApi.js";
 import * as nginx from "./utils/nginx.js";
+import type {ProxyPassConf} from "./interfaces/nginx.js";
 
 if (!await docker.validate()) {
     process.exit(1);
@@ -41,7 +42,15 @@ docker.monitorEvents((event) => {
                     const network = Object.values(container.NetworkSettings.Networks).find((it) => it.NetworkID == event.Actor.ID)!!
                     const ip = network.IPAddress;
                     const port = ports[0]!!;
-                    nginx.createNginxConfig(record, domain, ip, port, container.Name);
+                    const config: ProxyPassConf = {
+                        path: `./conf.d/${record}.conf`,
+                        domain,
+                        record,
+                        type: "Pass",
+                        ip,
+                        port,
+                    };
+                    nginx.createNginxConfig(config, container.Name);
                 }).then(() => {
                     console.log(`Created record ${subdomain}`);
                     docker.restartNginx();
