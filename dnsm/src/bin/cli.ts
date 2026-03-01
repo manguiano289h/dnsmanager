@@ -5,10 +5,6 @@ import fs from "fs";
 import type {HttpCodeConf, ProxyPassConf, RedirectConf} from "../interfaces/nginx.js";
 import * as nginx from "../utils/nginx.js";
 
-for (let i = 0; i < process.argv.length; i++) {
-    console.log(i + " - " + process.argv[i]);
-}
-
 if (!await docker.validate()) {
     process.exit(1);
 }
