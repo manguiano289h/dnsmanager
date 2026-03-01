@@ -29,7 +29,9 @@ if (args[0] === "domain") {
     const [ action, data ] = args.slice(1);
     if (action === "create") {
         if (data) {
-            cf.createRecord(data);
+            await cf.createRecord(data).then(({ record }) => {
+                console.log(`Created ${record}`);
+            });
         } else {
             console.log("You need to specify a domain record to create!");
             process.exit(0);
@@ -37,7 +39,9 @@ if (args[0] === "domain") {
     } else if (action === "delete" && data) {
         const { domain, record } = cf.parseDomain(data);
         if (record.id) {
-            cf.deleteRecord(record.id, domain);
+            await cf.deleteRecord(record.id, domain).then(() => {
+                console.log(`Deleted record ${record.name}`);
+            });
         } else {
             console.log("That record is not available in the Cloudflare API!");
             process.exit(0);
@@ -132,7 +136,51 @@ if (args[0] === "domain") {
         }
     }
 } else if (args[0] === "list") {
+    const [ data ] = args.slice(1);
+    if (data) {
+        const records = cf.getRecords(data);
+        if (records.length == 0) {
+            console.log("The specified domain has no records to list.");
+            process.exit(0);
+        }
 
+        if (!nginx.crtExists(data)) {
+            console.log("The specified domain has no SSL certificate configured.");
+        }
+
+        console.log(`${data} has ${records.length} records.`);
+        for (const { name } of records) {
+            if (!fs.existsSync(`./conf.d/${name}.conf`)) {
+                console.log(` - ${name}, without an nginx configuration.`);
+            } else { // These should be regexes instead
+                const file = fs.readFileSync(`./conf.d/${name}.conf`).toString()
+                if (file.includes("proxy_pass")) {
+                    if (file.startsWith("# name ")) {
+                        const container = file.substring(7, file.indexOf("\n"));
+                        console.log(` - ${name}, passing to ${container}`);
+                    } else {
+                        const substr = file.substring(file.indexOf("proxy_pass "))
+                        const address = substr.substring(0, substr.indexOf(";"));
+                        console.log(` - ${name}, passing to ${address}`);
+                    }
+                } else if (file.includes("return 301 ")) {
+                    const substr = file.substring(file.indexOf("return 301 "));
+                    const address = substr.substring(0, substr.indexOf(";"));
+                    console.log(` - ${name}, redirecting to ${address}`);
+                } else if (file.includes("return ")) {
+                    const substr = file.substring(file.indexOf("return "));
+                    const code = substr.substring(0, substr.indexOf(";"));
+                    console.log(` - ${name}, returning code ${code}`);
+                } else {
+                    console.log(` - ${name}, with an unknown nginx configuration`);
+                }
+            }
+        }
+        process.exit(0);
+    } else {
+        console.log("You need to specify a domain to list!");
+        process.exit(0);
+    }
 } else {
     console.log("Not a valid command!");
     console.log("- domain <create/delete> <record>");

@@ -59,17 +59,13 @@ function createNginxConfig(config: NginxConf, name?: string) {
         throw new Error(`Could not create a config file for config type "${config.type}"`);
     }
 
-    return fs.writeFile(config.path, file, (err) => {
-        if (err) {
-            throw err;
-        }
+    fs.writeFileSync(config.path, file);
 
-        if (crtExists(config.domain)) {
-            return;
-        }
+    if (crtExists(config.domain)) {
+        return;
+    }
 
-        createCSR(config.domain);
-    });
+    createCSR(config.domain);
 }
 
 function deleteNginxConfig(record: string) {
@@ -114,4 +110,4 @@ function createCSR(domain: string) {
     });
 }
 
-export { createNginxConfig, deleteNginxConfig };
+export { createNginxConfig, deleteNginxConfig, crtExists };

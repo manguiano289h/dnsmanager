@@ -150,4 +150,13 @@ function parseDomain(input: string): { record: { id?: string, name: string }, do
     return { record: parsedRecord, domain: parsedDomain };
 }
 
-export { validate, createRecord, deleteRecord, createCRT, parseDomain };
+// Could call parseDomain to accept inputting a specific record aswell
+function getRecords(input: string): { id: string, name: string }[] {
+    if (!zones[input]) {
+        throw new Error(`Domain ${input} is not available from the Cloudflare API`);
+    }
+
+    return zones[input].records
+}
+
+export { validate, createRecord, deleteRecord, createCRT, parseDomain, getRecords };
