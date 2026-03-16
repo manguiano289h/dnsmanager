@@ -132,20 +132,22 @@ if (args[0] === "domain") {
         }
     }
 } else if (args[0] === "list") {
-    const [ data ] = args.slice(1);
-    if (data) {
-        const records = cf.getRecords(data);
-        if (records.length == 0) {
-            console.log("The specified domain has no records to list.");
-            process.exit(0);
+    const zones = cf.getZones();
+
+    for (const [ zone, data ] of Object.entries(zones)) {
+        console.log(`${zone}:`);
+        if (nginx.crtExists(zone)) {
+            console.log("- Configured SSL");
+        } else {
+            console.log("- Missing SSL");
         }
 
-        if (!nginx.crtExists(data)) {
-            console.log("The specified domain has no SSL certificate configured.");
+        if (data.records.length == 0) {
+            console.log("- No records found.");
+            continue;
         }
 
-        console.log(`${data} has ${records.length} records.`);
-        for (const { name } of records) {
+        for (const { name } of data.records) {
             if (!fs.existsSync(`./conf.d/${name}.conf`)) {
                 console.log(` - ${name}, without an nginx configuration.`);
             } else { // These should be regexes instead
@@ -161,22 +163,20 @@ if (args[0] === "domain") {
                     }
                 } else if (file.includes("return 301 ")) {
                     const substr = file.substring(file.indexOf("return 301 "));
-                    const address = substr.substring(0, substr.indexOf(";"));
+                    const address = substr.substring(11, substr.indexOf(";"));
                     console.log(` - ${name}, redirecting to ${address}`);
                 } else if (file.includes("return ")) {
                     const substr = file.substring(file.indexOf("return "));
-                    const code = substr.substring(0, substr.indexOf(";"));
+                    const code = substr.substring(7, substr.indexOf(";"));
                     console.log(` - ${name}, returning code ${code}`);
                 } else {
                     console.log(` - ${name}, with an unknown nginx configuration`);
                 }
             }
         }
-        process.exit(0);
-    } else {
-        console.log("You need to specify a domain to list!");
-        process.exit(0);
     }
+
+    process.exit(0);
 } else {
     console.log("Not a valid command!");
     console.log("- domain <create/delete> <record>");

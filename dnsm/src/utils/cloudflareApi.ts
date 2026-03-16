@@ -9,6 +9,10 @@ import {cfRequest} from "./utils.js";
 let zones: { [key: string]: { id: string, records: { id: string, name: string }[] } } = {};
 let ip: string | undefined = undefined;
 
+function getZones() {
+    return zones;
+}
+
 async function getIp() {
     if (ip) {
         return ip;
@@ -150,13 +154,4 @@ function parseDomain(input: string): { record: { id?: string, name: string }, do
     return { record: parsedRecord, domain: parsedDomain };
 }
 
-// Could call parseDomain to accept inputting a specific record aswell
-function getRecords(input: string): { id: string, name: string }[] {
-    if (!zones[input]) {
-        throw new Error(`Domain ${input} is not available from the Cloudflare API`);
-    }
-
-    return zones[input].records
-}
-
-export { validate, createRecord, deleteRecord, createCRT, parseDomain, getRecords };
+export { getZones, validate, createRecord, deleteRecord, createCRT, parseDomain };
