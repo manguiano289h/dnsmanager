@@ -17,7 +17,7 @@ docker.monitorEvents((event) => {
             docker.addToNetwork(event.Actor.ID);
         } else if (event.Action === "disconnect") {
             if (!docker.removeFromNetwork(event.Actor.ID)) {
-                console.log(`dnsm disconnected from a network that it wasn't a part of? (${event.Actor.ID})`)
+                console.log(`dnsm disconnected from a network that it wasn't a part of? (${event.Actor.ID})`);
             }
         }
     } else if (docker.isInNetwork(event.Actor.ID)) {
@@ -26,7 +26,7 @@ docker.monitorEvents((event) => {
                 const labels = container.Config.Labels;
                 const subdomain = labels["tech.dnsmanager.domain"]?.toLowerCase();
                 if (!subdomain) {
-                    console.log(container.Name + " does not specify a subdomain.");
+                    console.log(`${container.Name} does not specify a subdomain.`);
                     return;
                 }
 
@@ -55,11 +55,11 @@ docker.monitorEvents((event) => {
                     console.log(`Created record ${subdomain}`);
                     docker.restartNginx();
                 }).catch((err) => {
-                    console.error("Cloudflare encountered an error while creating a record for " + container.Name);
+                    console.error(`Cloudflare encountered an error while creating a record for ${container.Name}`);
                     console.error(err);
                 });
             }).catch((err) => {
-               console.error("dnsm encountered an error while creating config for " + event.Actor.Attributes.container);
+               console.error(`dnsm encountered an error while creating config for ${event.Actor.Attributes.container}`);
                console.error(err);
             });
         } else if (event.Action === "disconnect") {
@@ -67,7 +67,7 @@ docker.monitorEvents((event) => {
                 const labels = container.Config.Labels;
                 const subdomain = labels["tech.dnsmanager.domain"]?.toLowerCase();
                 if (!subdomain) {
-                    console.log(container.Name + " does not specify a subdomain.");
+                    console.log(`${container.Name} does not specify a subdomain.`);
                     return;
                 }
 

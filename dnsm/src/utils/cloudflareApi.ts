@@ -68,7 +68,7 @@ async function createRecord(input: string) {
         "proxied": true,
         "content": ip, // Cloudflare API docs say this is optional - not true.
         "comment": "Created by dnsm"
-    }
+    };
 
     return await cfRequest<CreateRecordResponse>(`/zones/${domain.id}/dns_records`, {
         method: "POST",
@@ -103,7 +103,7 @@ async function createCRT(csr: string, domain: string) {
         hostnames: [domain, `*.${domain}`],
         request_type: "origin-rsa"
     };
-    return cfRequest<CreateCertificateResponse>("/certificates", { method: "POST", body: JSON.stringify(body) })
+    return cfRequest<CreateCertificateResponse>("/certificates", { method: "POST", body: JSON.stringify(body) });
 }
 
 function parseDomain(input: string): { record: { id?: string, name: string }, domain: { id: string, name: string } } {

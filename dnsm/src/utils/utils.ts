@@ -2,9 +2,9 @@ import {Agent, fetch, type RequestInit} from "undici";
 import type {CloudflareResponse} from "../interfaces/cloudflare.js";
 
 export function cfRequest<T extends CloudflareResponse>(url: string, options: RequestInit = {}) {
-    return fetch("https://api.cloudflare.com/client/v4" + url, {
+    return fetch(`https://api.cloudflare.com/client/v4${url}`, {
         headers: {
-            "Authorization": "Bearer " + process.env.API_TOKEN,
+            "Authorization": `Bearer ${process.env.API_TOKEN}`,
         },
         ...options,
     }).then((res) => res.json() as Promise<T>).then((res) => {
@@ -25,7 +25,7 @@ export function cfRequest<T extends CloudflareResponse>(url: string, options: Re
 }
 
 export function dockerRequest(url: string, options: RequestInit = {}) {
-    return fetch("http://localhost" + url, {
+    return fetch(`http://localhost${url}`, {
         dispatcher: new Agent({
             connect: {
                 socketPath: "/tmp/docker.sock",

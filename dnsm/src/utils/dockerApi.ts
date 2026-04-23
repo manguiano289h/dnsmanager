@@ -27,7 +27,7 @@ async function validate() {
 }
 
 async function inspectContainer(id: string) {
-    const res = await dockerRequest("/containers/" + id + "/json");
+    const res = await dockerRequest(`/containers/${id}/json`);
     return await res.json() as Container;
 }
 
@@ -53,7 +53,7 @@ function isInNetwork(network: string): boolean {
 function restartNginx() {
     void dockerRequest("/containers/nginx/kill?signal=SIGHUP", {
         method: "POST",
-    })
+    });
 }
 
 async function monitorEvents(onEvent: (event: NetworkEvent) => void) {
@@ -61,7 +61,7 @@ async function monitorEvents(onEvent: (event: NetworkEvent) => void) {
         "type": ["network"],
         "event": ["connect", "disconnect"],
     };
-    const url = "/events?filters=" + encodeURIComponent(JSON.stringify(filters));
+    const url = `/events?filters=${encodeURIComponent(JSON.stringify(filters))}`;
 
     const req = await dockerRequest(url);
     for await (const chunk of req.body!!) {

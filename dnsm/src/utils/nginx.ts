@@ -19,7 +19,7 @@ server {
         proxy_pass http://${config.record};
     }
 }
-`
+`;
 
 const codeFile = (config: HttpCodeConf) => `# manual
 server {
@@ -31,7 +31,7 @@ server {
     
     return ${config.code};
 }
-`
+`;
 
 const redirectFile = (config: RedirectConf) => `# manual
 server {
@@ -43,7 +43,7 @@ server {
     
     return 301 ${config.redirect};
 }
-`
+`;
 
 function createNginxConfig(config: NginxConf, name?: string) {
     let file: string | undefined;
@@ -73,7 +73,7 @@ function deleteNginxConfig(record: string) {
 }
 
 function crtExists(domain: string) {
-    return fs.existsSync(`./conf.d/certs/${domain}.crt`) && fs.existsSync(`./conf.d/certs/${domain}.key`)
+    return fs.existsSync(`./conf.d/certs/${domain}.crt`) && fs.existsSync(`./conf.d/certs/${domain}.key`);
 }
 
 function createCSR(domain: string) {

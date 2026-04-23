@@ -56,4 +56,4 @@ interface OtherRecord {
     type: "";
 }
 
-export type DNSRecord = ARecord | OtherRecord;
+export type DNSRecord = ARecord | OtherRecord

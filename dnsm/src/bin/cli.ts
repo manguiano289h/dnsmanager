@@ -151,13 +151,13 @@ if (args[0] === "domain") {
             if (!fs.existsSync(`./conf.d/${name}.conf`)) {
                 console.log(` - ${name}, without an nginx configuration.`);
             } else { // These should be regexes instead
-                const file = fs.readFileSync(`./conf.d/${name}.conf`).toString()
+                const file = fs.readFileSync(`./conf.d/${name}.conf`).toString();
                 if (file.includes("proxy_pass")) {
                     if (file.startsWith("# name ")) {
                         const container = file.substring(7, file.indexOf("\n"));
                         console.log(` - ${name}, passing to ${container}`);
                     } else {
-                        const substr = file.substring(file.indexOf("proxy_pass "))
+                        const substr = file.substring(file.indexOf("proxy_pass "));
                         const address = substr.substring(0, substr.indexOf(";"));
                         console.log(` - ${name}, passing to ${address}`);
                     }
